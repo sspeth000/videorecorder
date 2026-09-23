@@ -1,123 +1,298 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 * {
   box-sizing: border-box;
+}
+
+:root {
+  --bg: #08090d;
+  --panel: rgba(20, 22, 30, 0.78);
+  --panel-border: rgba(255, 255, 255, 0.09);
+  --text: #f5f7ff;
+  --muted: #9297a8;
+  --accent: #7c5cff;
+  --accent2: #5b8cff;
+  --danger: #ff3d5a;
+}
+
+html {
+  min-height: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: system-ui, sans-serif;
-  background: #111;
-  color: white;
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(124, 92, 255, 0.18), transparent 30%),
+    radial-gradient(circle at 85% 20%, rgba(91, 140, 255, 0.14), transparent 30%),
+    var(--bg);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, black, transparent);
 }
 
 .app {
-  width: min(900px, 94%);
+  width: min(1050px, 94%);
   margin: auto;
-  padding: 30px 0 50px;
+  padding: 45px 0 70px;
 }
+
+/* HEADER */
 
 header {
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 }
 
 header h1 {
-  margin-bottom: 8px;
+  margin: 0;
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  background: linear-gradient(90deg, #fff, #b9b1ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 header p {
-  color: #aaa;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 15px;
 }
 
-.recorder,
-.result,
-.privacy {
-  background: #1d1d1d;
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 20px;
+/* MAIN CAMERA */
+
+.recorder {
+  position: relative;
+  overflow: hidden;
+  padding: 10px;
+  border-radius: 24px;
+  background: rgba(255,255,255,.045);
+  border: 1px solid var(--panel-border);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.45),
+    inset 0 1px rgba(255,255,255,.04);
+  backdrop-filter: blur(20px);
 }
 
-#preview,
-#recording {
+#preview {
   width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
   display: block;
-  background: #000;
-  border-radius: 12px;
+  border-radius: 17px;
+  background: #020205;
 }
+
+/* STATUS */
 
 .status {
-  text-align: center;
-  color: #aaa;
-  margin: 15px 0 5px;
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.58);
+  border: 1px solid rgba(255,255,255,.1);
+  backdrop-filter: blur(12px);
+  color: #ddd;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .timer {
-  text-align: center;
-  font-size: 32px;
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.58);
+  border: 1px solid rgba(255,255,255,.1);
+  backdrop-filter: blur(12px);
   font-variant-numeric: tabular-nums;
-  margin: 10px;
+  font-size: 14px;
+  font-weight: 700;
 }
+
+/* CONTROLS */
 
 .controls {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 8px 8px;
   flex-wrap: wrap;
 }
 
 button,
 .download {
   border: 0;
-  border-radius: 10px;
-  padding: 12px 20px;
-  font-size: 16px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  background: #333;
-  color: white;
+  transition:
+    transform .15s ease,
+    box-shadow .15s ease,
+    background .15s ease,
+    opacity .15s ease;
 }
 
-button:hover,
-.download:hover {
-  background: #444;
+button {
+  padding: 12px 19px;
+  border-radius: 12px;
+  color: white;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.13);
+  box-shadow: 0 8px 25px rgba(0,0,0,.25);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#startCamera {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  box-shadow: 0 8px 25px rgba(124,92,255,.25);
+}
+
+#startRecording {
+  background: var(--danger);
+  border: none;
+  box-shadow: 0 8px 25px rgba(255,61,90,.2);
+}
+
+#stopRecording {
+  background: rgba(255,255,255,.08);
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: .35;
   cursor: not-allowed;
+}
+
+/* RESULT */
+
+.result {
+  margin-top: 22px;
+  padding: 22px;
+  border-radius: 20px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(20px);
+}
+
+.result h2 {
+  margin: 0 0 16px;
+  font-size: 19px;
+}
+
+#recording {
+  width: 100%;
+  max-height: 600px;
+  display: block;
+  border-radius: 14px;
+  background: #000;
 }
 
 .download {
   display: block;
   width: fit-content;
-  margin: 15px auto 0;
+  margin: 18px auto 0;
+  padding: 12px 20px;
+  color: white;
   text-decoration: none;
-  background: #2563eb;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 8px 25px rgba(124,92,255,.25);
 }
 
 .download:hover {
-  background: #1d4ed8;
+  transform: translateY(-2px);
 }
 
+/* PRIVACY CARD */
+
 .privacy {
+  margin-top: 22px;
+  padding: 22px;
   text-align: center;
+  border-radius: 20px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid var(--panel-border);
+}
+
+.privacy h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
 }
 
 .privacy p {
-  color: #aaa;
-  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 600px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .hidden {
   display: none;
 }
 
+/* MOBILE */
+
 @media (max-width: 600px) {
   .app {
-    padding-top: 15px;
+    width: 96%;
+    padding-top: 25px;
   }
 
-  .controls button {
+  .recorder {
+    padding: 6px;
+    border-radius: 18px;
+  }
+
+  #preview {
+    border-radius: 13px;
+  }
+
+  .status {
+    top: 15px;
+    left: 15px;
+    font-size: 11px;
+  }
+
+  .timer {
+    top: 15px;
+    right: 15px;
+    font-size: 12px;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  button {
     width: 100%;
   }
 }
