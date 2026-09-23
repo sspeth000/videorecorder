@@ -1,99 +1,509 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A private browser-based video recorder. Your recordings stay on your device.">
-  <title>Private Video Recorder</title>
-  <link rel="stylesheet" href="style.css">
-</head>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-<body>
-  <main class="app">
+* {
+  box-sizing: border-box;
+}
 
-    <header>
-      <h1>🎥 Private Video Recorder</h1>
-      <p>Your recordings stay on your device.</p>
-    </header>
+:root {
+  --bg: #08090d;
+  --panel: rgba(20, 22, 30, 0.78);
+  --panel-border: rgba(255, 255, 255, 0.09);
+  --text: #f5f7ff;
+  --muted: #9297a8;
+  --accent: #7c5cff;
+  --accent2: #5b8cff;
+  --danger: #ff3d5a;
+}
 
-    <section class="recorder">
-      <video id="preview" autoplay muted playsinline></video>
+html {
+  min-height: 100%;
+}
 
-      <div id="status" class="status">
-        Camera not started
-      </div>
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
 
-      <div id="timer" class="timer">
-        00:00
-      </div>
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(124, 92, 255, 0.18),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(91, 140, 255, 0.14),
+      transparent 30%
+    ),
+    var(--bg);
+}
 
-      <div class="controls">
-        <button id="startCamera">Start Camera</button>
-        <button id="startRecording" disabled>● Record</button>
-        <button id="stopRecording" disabled>■ Stop</button>
-      </div>
-    </section>
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
 
-    <section id="result" class="result hidden">
-      <h2>Your Recording</h2>
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px
+    );
 
-      <video id="recording" controls playsinline></video>
+  background-size: 40px 40px;
 
-      <a id="download" class="download">
-        💾 Save Video
-      </a>
-    </section>
+  mask-image: linear-gradient(
+    to bottom,
+    black,
+    transparent
+  );
+}
 
-    <section class="privacy">
-      <h2>🔒 Privacy</h2>
+.app {
+  width: min(1050px, 94%);
+  margin: auto;
+  padding: 45px 0 70px;
+}
 
-      <p>
-        This recorder does not have a server or upload system.
-        Video recording happens directly in your browser.
-      </p>
-    </section>
+/* HEADER */
 
-    <section class="why-us">
-      <h2>❓ Question of the Day</h2>
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
 
-      <h3>Why is Private Video Recorder different from other recorders?</h3>
+header h1 {
+  margin: 0;
 
-      <p>
-        Sure, you might say,
-        “Well, <a href="https://webcamera.io/" target="_blank" rel="noopener noreferrer">webcamera.io</a>
-        also says it's secure and private!”
-      </p>
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
 
-      <p>
-        There's an important difference, though.
-        According to
-        <a href="https://webcamera.io/legal" target="_blank" rel="noopener noreferrer">
-          webcamera.io's own privacy policy
-        </a>,
-        data provided while using its services is stored on its servers
-        and automatically deleted no later than 12 hours after you finish
-        using the service.
-      </p>
+  background: linear-gradient(
+    90deg,
+    #fff,
+    #b9b1ff
+  );
 
-      <p>
-        Private Video Recorder takes a different approach.
-        <strong>Your recording stays in your browser.</strong>
-        There is no video-upload system or recording backend in this project.
-      </p>
+  -webkit-background-clip: text;
+  background-clip: text;
 
-      <p>
-        That means your recording doesn't need to be sent to a remote server
-        just to be processed. Record it, preview it, and save it directly to
-        your own device.
-      </p>
+  color: transparent;
+}
 
-      <p class="privacy-highlight">
-        🔒 <strong>No upload. No server-side recording storage. Just your browser.</strong>
-      </p>
-    </section>
+header p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
 
-  </main>
+/* CAMERA */
 
-  <script src="script.js"></script>
-</body>
-</html>
+.recorder {
+  position: relative;
+  overflow: hidden;
+
+  padding: 10px;
+
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--panel-border);
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.45),
+    inset 0 1px rgba(255, 255, 255, 0.04);
+
+  backdrop-filter: blur(20px);
+}
+
+#preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+
+  object-fit: cover;
+
+  display: block;
+
+  border-radius: 17px;
+
+  background: #020205;
+}
+
+/* CAMERA STATUS */
+
+.status {
+  position: absolute;
+
+  top: 25px;
+  left: 25px;
+
+  padding: 8px 13px;
+
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.58);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  backdrop-filter: blur(12px);
+
+  color: #ddd;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.timer {
+  position: absolute;
+
+  top: 25px;
+  right: 25px;
+
+  padding: 8px 13px;
+
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.58);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  backdrop-filter: blur(12px);
+
+  font-variant-numeric: tabular-nums;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* CONTROLS */
+
+.controls {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 18px 8px 8px;
+
+  flex-wrap: wrap;
+}
+
+button,
+.download {
+  border: 0;
+
+  font-family: inherit;
+
+  font-weight: 600;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+button {
+  padding: 12px 19px;
+
+  border-radius: 12px;
+
+  color: white;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  background: rgba(255, 255, 255, 0.13);
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#startCamera {
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      var(--accent2)
+    );
+
+  border: none;
+
+  box-shadow:
+    0 8px 25px rgba(124, 92, 255, 0.25);
+}
+
+#startRecording {
+  background: var(--danger);
+
+  border: none;
+
+  box-shadow:
+    0 8px 25px rgba(255, 61, 90, 0.2);
+}
+
+#stopRecording {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+button:disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+}
+
+/* RECORDING RESULT */
+
+.result {
+  margin-top: 22px;
+
+  padding: 22px;
+
+  border-radius: 20px;
+
+  background: var(--panel);
+
+  border: 1px solid var(--panel-border);
+
+  backdrop-filter: blur(20px);
+}
+
+.result h2 {
+  margin: 0 0 16px;
+
+  font-size: 19px;
+}
+
+#recording {
+  width: 100%;
+
+  max-height: 600px;
+
+  display: block;
+
+  border-radius: 14px;
+
+  background: #000;
+}
+
+.download {
+  display: block;
+
+  width: fit-content;
+
+  margin: 18px auto 0;
+
+  padding: 12px 20px;
+
+  color: white;
+
+  text-decoration: none;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--accent),
+      var(--accent2)
+    );
+
+  box-shadow:
+    0 8px 25px rgba(124, 92, 255, 0.25);
+}
+
+.download:hover {
+  transform: translateY(-2px);
+}
+
+/* PRIVACY */
+
+.privacy {
+  margin-top: 22px;
+
+  padding: 22px;
+
+  text-align: center;
+
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid var(--panel-border);
+}
+
+.privacy h2 {
+  margin: 0 0 8px;
+
+  font-size: 17px;
+}
+
+.privacy p {
+  margin: 0 auto;
+
+  max-width: 600px;
+
+  color: var(--muted);
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+/* WHY US */
+
+.why-us {
+  margin-top: 22px;
+
+  padding: 28px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(124, 92, 255, 0.09),
+      rgba(91, 140, 255, 0.035)
+    );
+
+  border: 1px solid rgba(124, 92, 255, 0.18);
+
+  box-shadow:
+    0 15px 45px rgba(0, 0, 0, 0.2);
+
+  backdrop-filter: blur(20px);
+}
+
+.why-us h2 {
+  margin: 0 0 8px;
+
+  font-size: 20px;
+}
+
+.why-us h3 {
+  margin: 0 0 18px;
+
+  font-size: 24px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #fff,
+      #b9b1ff
+    );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  color: transparent;
+}
+
+.why-us p {
+  color: #aeb2c0;
+
+  line-height: 1.7;
+
+  margin: 12px 0;
+}
+
+.why-us a {
+  color: #9d8cff;
+
+  text-decoration: none;
+}
+
+.why-us a:hover {
+  text-decoration: underline;
+}
+
+.privacy-highlight {
+  margin-top: 20px !important;
+
+  padding: 15px 18px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: #eee !important;
+}
+
+/* HIDDEN */
+
+.hidden {
+  display: none;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  .app {
+    width: 96%;
+
+    padding-top: 25px;
+  }
+
+  .recorder {
+    padding: 6px;
+
+    border-radius: 18px;
+  }
+
+  #preview {
+    border-radius: 13px;
+  }
+
+  .status {
+    top: 15px;
+    left: 15px;
+
+    font-size: 11px;
+  }
+
+  .timer {
+    top: 15px;
+    right: 15px;
+
+    font-size: 12px;
+  }
+
+  .controls {
+    display: grid;
+
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .why-us {
+    padding: 22px;
+  }
+
+  .why-us h3 {
+    font-size: 21px;
+  }
+}
