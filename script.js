@@ -19,8 +19,6 @@ let timerInterval = null;
 let startTime = null;
 let videoURL = null;
 
-
-// Find a video format supported by this browser.
 function getMimeType() {
   const types = [
     "video/webm;codecs=vp9,opus",
@@ -38,13 +36,24 @@ function getMimeType() {
   return "";
 }
 
-
-// Start the camera.
 startCamera.addEventListener("click", async () => {
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
+      video: {
+        width: {
+          ideal: 3840
+        },
+        height: {
+          ideal: 2160
+        },
+        frameRate: {
+          ideal: 60
+        }
+      },
+      audio: {
+        sampleRate: 48000,
+        channelCount: 2
+      }
     });
 
     preview.srcObject = stream;
@@ -62,8 +71,6 @@ startCamera.addEventListener("click", async () => {
   }
 });
 
-
-// Start recording.
 startRecording.addEventListener("click", () => {
   if (!stream) return;
 
@@ -71,13 +78,23 @@ startRecording.addEventListener("click", () => {
 
   const mimeType = getMimeType();
 
+  const options = {
+    videoBitsPerSecond: 50000000,
+    audioBitsPerSecond: 320000
+  };
+
+  if (mimeType) {
+    options.mimeType = mimeType;
+  }
+
   try {
-    recorder = mimeType
-      ? new MediaRecorder(stream, { mimeType })
-      : new MediaRecorder(stream);
+    recorder = new MediaRecorder(stream, options);
   } catch (error) {
     console.error(error);
-    status.textContent = "This browser cannot record video.";
+
+    status.textContent =
+      "This browser cannot record video.";
+
     return;
   }
 
@@ -101,8 +118,6 @@ startRecording.addEventListener("click", () => {
   stopRecording.disabled = false;
 });
 
-
-// Stop recording.
 stopRecording.addEventListener("click", () => {
   if (!recorder || recorder.state === "inactive") return;
 
@@ -116,8 +131,6 @@ stopRecording.addEventListener("click", () => {
   stopRecording.disabled = true;
 });
 
-
-// Turn recorded chunks into a local file.
 function saveRecording() {
   const mimeType = recorder.mimeType || "video/webm";
 
@@ -125,7 +138,6 @@ function saveRecording() {
     type: mimeType
   });
 
-  // Remove the previous local URL.
   if (videoURL) {
     URL.revokeObjectURL(videoURL);
   }
@@ -140,7 +152,8 @@ function saveRecording() {
     ? "mp4"
     : "webm";
 
-  download.download = `recording-${Date.now()}.${extension}`;
+  download.download =
+    `recording-${Date.now()}.${extension}`;
 
   result.classList.remove("hidden");
 
@@ -148,8 +161,6 @@ function saveRecording() {
     "Recording ready — it has not been uploaded.";
 }
 
-
-// Update recording timer.
 function updateTimer() {
   const elapsed = Math.floor(
     (Date.now() - startTime) / 1000
@@ -163,12 +174,8 @@ function updateTimer() {
     `${String(seconds).padStart(2, "0")}`;
 }
 
-
-// Reset timer when page loads.
 timer.textContent = "00:00";
 
-
-// Stop the camera when leaving the page.
 window.addEventListener("beforeunload", () => {
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
