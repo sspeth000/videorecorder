@@ -2,6 +2,7 @@ const preview = document.getElementById("preview");
 const recording = document.getElementById("recording");
 
 const startCamera = document.getElementById("startCamera");
+const switchCamera = document.getElementById("switchCamera");
 const startRecording = document.getElementById("startRecording");
 const stopRecording = document.getElementById("stopRecording");
 
@@ -18,6 +19,8 @@ let chunks = [];
 let timerInterval = null;
 let startTime = null;
 let videoURL = null;
+
+let facingMode = "user";
 
 function getMimeType() {
   const types = [
@@ -36,10 +39,17 @@ function getMimeType() {
   return "";
 }
 
-startCamera.addEventListener("click", async () => {
+async function startCameraStream() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
+        facingMode: {
+          ideal: facingMode
+        },
         width: {
           ideal: 3840
         },
@@ -58,9 +68,21 @@ startCamera.addEventListener("click", async () => {
 
     preview.srcObject = stream;
 
-    status.textContent = "Camera ready";
+    const videoTrack = stream.getVideoTracks()[0];
+
+    if (videoTrack) {
+      const settings = videoTrack.getSettings();
+
+      console.log("Camera settings:", settings);
+    }
+
+    status.textContent =
+      facingMode === "user"
+        ? "Front camera ready"
+        : "Back camera ready";
 
     startCamera.disabled = true;
+    switchCamera.disabled = false;
     startRecording.disabled = false;
 
   } catch (error) {
@@ -69,6 +91,27 @@ startCamera.addEventListener("click", async () => {
     status.textContent =
       "Camera permission was denied or the camera is unavailable.";
   }
+}
+
+startCamera.addEventListener("click", async () => {
+  await startCameraStream();
+});
+
+switchCamera.addEventListener("click", async () => {
+  if (recorder && recorder.state !== "inactive") {
+    status.textContent =
+      "Stop the recording before switching cameras.";
+    return;
+  }
+
+  facingMode =
+    facingMode === "user"
+      ? "environment"
+      : "user";
+
+  status.textContent = "Switching camera...";
+
+  await startCameraStream();
 });
 
 startRecording.addEventListener("click", () => {
@@ -115,6 +158,7 @@ startRecording.addEventListener("click", () => {
   status.textContent = "🔴 Recording";
 
   startRecording.disabled = true;
+  switchCamera.disabled = true;
   stopRecording.disabled = false;
 });
 
@@ -128,6 +172,7 @@ stopRecording.addEventListener("click", () => {
   status.textContent = "Recording stopped";
 
   startRecording.disabled = false;
+  switchCamera.disabled = false;
   stopRecording.disabled = true;
 });
 
