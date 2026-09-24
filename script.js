@@ -24,10 +24,10 @@ let facingMode = "user";
 
 function getMimeType() {
   const types = [
+    "video/mp4",
     "video/webm;codecs=vp9,opus",
     "video/webm;codecs=vp8,opus",
-    "video/webm",
-    "video/mp4"
+    "video/webm"
   ];
 
   for (const type of types) {
@@ -39,76 +39,34 @@ function getMimeType() {
   return "";
 }
 
-async function getCameraStream() {
-  const attempts = [
-    {
-      video: {
-        facingMode: facingMode,
-        width: { ideal: 3840 },
-        height: { ideal: 2160 },
-        frameRate: { ideal: 60 }
-      },
-      audio: true
-    },
-    {
-      video: {
-        facingMode: facingMode,
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 60 }
-      },
-      audio: true
-    },
-    {
-      video: {
-        facingMode: facingMode,
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      },
-      audio: true
-    },
-    {
-      video: {
-        facingMode: facingMode
-      },
-      audio: true
-    }
-  ];
-
-  let lastError = null;
-
-  for (const constraints of attempts) {
-    try {
-      return await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw lastError;
-}
-
-async function startCameraStream() {
+async function openCamera() {
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
     stream = null;
   }
 
-  status.textContent = "Starting camera...";
-
   try {
-    stream = await getCameraStream();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        width: {
+          ideal: 1280
+        },
+        height: {
+          ideal: 720
+        },
+        frameRate: {
+          ideal: 30
+        },
+        facingMode: {
+          ideal: facingMode
+        }
+      },
+      audio: true
+    });
 
     preview.srcObject = stream;
 
-    const videoTrack = stream.getVideoTracks()[0];
-
-    if (videoTrack) {
-      console.log(
-        "Camera settings:",
-        videoTrack.getSettings()
-      );
-    }
+    await preview.play();
 
     status.textContent =
       facingMode === "user"
@@ -120,7 +78,7 @@ async function startCameraStream() {
     startRecording.disabled = false;
 
   } catch (error) {
-    console.error("Camera error:", error);
+    console.error(error);
 
     status.textContent =
       "Unable to access the camera.";
@@ -128,13 +86,13 @@ async function startCameraStream() {
 }
 
 startCamera.addEventListener("click", async () => {
-  await startCameraStream();
+  await openCamera();
 });
 
 switchCamera.addEventListener("click", async () => {
   if (recorder && recorder.state !== "inactive") {
     status.textContent =
-      "Stop the recording before switching cameras.";
+      "Stop recording before switching cameras.";
     return;
   }
 
@@ -146,7 +104,10 @@ switchCamera.addEventListener("click", async () => {
       ? "environment"
       : "user";
 
-  await startCameraStream();
+  status.textContent =
+    "Switching camera...";
+
+  await openCamera();
 });
 
 startRecording.addEventListener("click", () => {
@@ -157,8 +118,8 @@ startRecording.addEventListener("click", () => {
   const mimeType = getMimeType();
 
   const options = {
-    videoBitsPerSecond: 50000000,
-    audioBitsPerSecond: 320000
+    videoBitsPerSecond: 8000000,
+    audioBitsPerSecond: 128000
   };
 
   if (mimeType) {
@@ -166,17 +127,17 @@ startRecording.addEventListener("click", () => {
   }
 
   try {
-    recorder = new MediaRecorder(stream, options);
+    recorder = new MediaRecorder(
+      stream,
+      options
+    );
   } catch (error) {
-    console.error("Recorder error:", error);
+    console.error(error);
 
     try {
       recorder = new MediaRecorder(stream);
     } catch (fallbackError) {
-      console.error(
-        "Fallback recorder error:",
-        fallbackError
-      );
+      console.error(fallbackError);
 
       status.textContent =
         "This browser cannot record video.";
@@ -212,7 +173,8 @@ startRecording.addEventListener("click", () => {
     1000
   );
 
-  status.textContent = "🔴 Recording";
+  status.textContent =
+    "🔴 Recording";
 
   startRecording.disabled = true;
   switchCamera.disabled = true;
@@ -238,7 +200,7 @@ stopRecording.addEventListener("click", () => {
 });
 
 function saveRecording() {
-  if (!recorder || chunks.length === 0) {
+  if (chunks.length === 0) {
     status.textContent =
       "No recording data was created.";
 
@@ -277,9 +239,7 @@ function saveRecording() {
 }
 
 function updateTimer() {
-  if (!startTime) {
-    return;
-  }
+  if (!startTime) return;
 
   const elapsed = Math.floor(
     (Date.now() - startTime) / 1000
